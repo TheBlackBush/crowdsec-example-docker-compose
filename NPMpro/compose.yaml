@@ -1,0 +1,36 @@
+services:
+  npmpro:
+    container_name: npmpro
+    image: docker.io/blackbush/npmpro:latest # or ghcr.io/theblackbush/npmpro:latest
+    restart: unless-stopped
+    network_mode: host
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+      - SETGID
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - "/opt/npmpro:/data"
+    environment:
+      - "TZ=Etc/UTC" # change to your time zone, for example Europe/Berlin
+      - "LOGROTATE=true" # writes the nginx access and error logs to /opt/npmpro/nginx/logs, which CrowdSec reads (same as "Write log files" under Settings, Logs & monitoring)
+# All other options: https://github.com/TheBlackBush/NPMpro/blob/develop/compose.yaml
+
+  crowdsec:
+    container_name: crowdsec
+    image: docker.io/crowdsecurity/crowdsec:latest
+    restart: unless-stopped
+    network_mode: bridge
+    ports:
+      - "127.0.0.1:7422:7422" # AppSec, used by the NPMpro bouncer
+      - "127.0.0.1:8080:8080" # Local API, used by the NPMpro bouncer
+    environment:
+      - "TZ=Etc/UTC" # change to your time zone
+      - "COLLECTIONS=TheBlackBush/npmpro"
+    volumes:
+      - "./crowdsec/npmpro.yaml:/etc/crowdsec/acquis.d/npmpro.yaml:ro"
+      - "/opt/crowdsec/conf:/etc/crowdsec"
+      - "/opt/crowdsec/data:/var/lib/crowdsec/data"
+      - "/opt/npmpro/nginx/logs:/opt/npmpro/nginx/logs:ro"

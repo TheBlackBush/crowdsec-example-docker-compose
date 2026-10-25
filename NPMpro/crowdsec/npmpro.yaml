@@ -1,0 +1,13 @@
+filenames:
+  - /opt/npmpro/nginx/logs/access.log
+  - /opt/npmpro/nginx/logs/error.log
+labels:
+  type: npmpro
+---
+listen_addr: 0.0.0.0:7422
+appsec_configs:
+  - crowdsecurity/appsec-default
+name: appsec
+source: appsec
+labels:
+  type: appsec
